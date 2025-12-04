@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Advent of code 2025 problem solutions.",
   "main": "none",
+  "type": "module",
   "repository": "git@github.com:BrandonCrowther/advent-2025.git",
   "author": "Brandon Crowther <bcrowthe11@gmail.com>",
   "license": "MIT",
