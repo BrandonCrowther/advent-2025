@@ -64,6 +64,9 @@ class MathProblem {
   appendNumber(symbol) {
     this.numberList.push(symbol);
   }
+
+  // Problem is finally broken up, but numbers need to rotate vertically
+  // And also drop the padding from the input.
   rotateNumbers() {
     let newList = [];
     for (let characterIndex = 0; characterIndex < this.numberList[0].length; characterIndex++) {
@@ -78,6 +81,7 @@ class MathProblem {
     }
     this.numberList = newList;
   }
+
   applyOperation() {
     this.numberList = this.numberList.map((i) => Number(i));
     if (this.operation === "+") {
