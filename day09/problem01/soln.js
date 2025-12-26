@@ -32,8 +32,19 @@ class RedTile {
 class Board {
   constructor(tileList) {
     this.tileList = tileList;
+    this.maxBoundY = 0;
+    this.maxBoundX = 0;
     this.distanceMatrix = tileList.map(() => tileList.map(() => UNINITIALIZED));
     this.maxDistance = -1;
+    this.distanceMatrix.forEach((tile) => {
+      if (tile.x > this.maxBoundX) {
+        this.maxBoundX = tile.x;
+      }
+      if (tile.y > this.maxBoundY) {
+        this.maxBoundX = tile.y;
+      }
+    });
+
     this.distanceMatrix.forEach((col, colIndex) => {
       col.forEach((_, rowIndex) => {
         const computedDistance = this.tileList[colIndex].getRectangleSize(this.tileList[rowIndex]);
@@ -68,5 +79,6 @@ async function solution(path) {
   console.table(board.tileList);
   console.table(board.distanceMatrix);
   console.table(board.maxDistance);
+  console.log(board.maxBoundX, board.maxBoundY);
 }
 solution(process.argv[2]);
