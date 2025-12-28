@@ -8,7 +8,7 @@ const MARKER_TILE = "O";
 
 class Node {
   constructor(id, x, y) {
-    this.id = id;
+    // this.id = id;
     this.x = Number(x);
     this.y = Number(y);
   }
@@ -27,7 +27,7 @@ class Node {
   }
 
   toString() {
-    return `{${this.id}: ${this.x}-${this.y}}`;
+    return `{${this.x}-${this.y}}`;
   }
 
   isBetweenX(otherLine) {
@@ -45,7 +45,6 @@ class Node {
   }
 
   isIdentical(otherNode) {
-    // return this.id === otherNode.id ||
     return this.x === otherNode.x && this.y === otherNode.y;
   }
 }
@@ -54,6 +53,9 @@ class Line {
   constructor(node1, node2) {
     this.node1 = node1;
     this.node2 = node2;
+    if (node2.x !== node1.x && node2.y !== node1.y) {
+      throw new Error(`${node1.toString()} is not compatible with ${node2.toString()}`);
+    }
   }
 
   isVertical() {
@@ -68,17 +70,24 @@ class Line {
     if (this.hasNode(otherLine.node1) || this.hasNode(otherLine.node2)) {
       return false;
     }
-
-    if (this.isVertical()) {
-      if (this.node1.isBetweenX(otherLine) || this.node2.isBetweenX(otherLine)) {
-        return true;
-      }
+    if (this.isVertical() && otherLine.isHorizontal()) {
+      // For vertical line to intersect horizontal line:
+      // 1. Vertical's X must be between horizontal's X range
+      // 2. Horizontal's Y must be between vertical's Y range
+      return (
+        (this.node1.isBetweenX(otherLine) || this.node2.isBetweenX(otherLine)) &&
+        (otherLine.node1.isBetweenY(this) || otherLine.node2.isBetweenY(this))
+      );
     }
 
-    if (this.isHorizontal()) {
-      if (this.node1.isBetweenY(otherLine) || this.node2.isBetweenY(otherLine)) {
-        return true;
-      }
+    if (this.isHorizontal() && otherLine.isVertical()) {
+      // For horizontal line to intersect vertical line:
+      // 1. Horizontal's Y must be between vertical's Y range
+      // 2. Vertical's X must be between horizontal's X range
+      return (
+        (this.node1.isBetweenY(otherLine) || this.node2.isBetweenY(otherLine)) &&
+        (otherLine.node1.isBetweenX(this) || otherLine.node2.isBetweenX(this))
+      );
     }
     return false;
   }
@@ -126,23 +135,35 @@ class Board {
 
     this.distanceMatrix.forEach((col, colIndex) => {
       col.forEach((_, rowIndex) => {
+        if (rowIndex === colIndex) {
+          this.distanceMatrix[colIndex][rowIndex] = -1;
+          return;
+        }
+
         const tileOne = this.tileList[colIndex];
         const tileTwo = this.tileList[rowIndex];
         let computedDistance = tileOne.getRectangleSize(tileTwo);
+        // console.log(computedDistance);
 
         const nodeOne = new Node(0, tileOne.x, tileOne.y);
-        const nodeTwo = new Node(0, tileTwo.x, tileOne.y);
-        const nodeThree = new Node(0, tileOne.x, tileTwo.y);
-        const nodeFour = new Node(0, tileTwo.x, tileTwo.y);
+        const nodeTwo = new Node(0, tileOne.x, tileTwo.y);
+        const nodeFour = new Node(0, tileTwo.x, tileOne.y);
+        const nodeThree = new Node(0, tileTwo.x, tileTwo.y);
 
         const lineOne = new Line(nodeOne, nodeTwo);
         const lineTwo = new Line(nodeTwo, nodeThree);
         const lineThree = new Line(nodeThree, nodeFour);
         const lineFour = new Line(nodeFour, nodeOne);
 
+        // console.log(lineOne, lineTwo, lineThree, lineFour);
+
         [lineOne, lineTwo, lineThree, lineFour].forEach((ghostLine) => {
           this.lineList.forEach((actualLine) => {
             if (ghostLine.isIntersecting(actualLine)) {
+              // console.log("========================================");
+              // console.log(ghostLine);
+              // console.log(actualLine);
+              // console.log("========================================");
               computedDistance = -1;
             }
           });
@@ -152,6 +173,7 @@ class Board {
           this.maxDistance = computedDistance;
         }
         this.distanceMatrix[colIndex][rowIndex] = computedDistance;
+        // this.distanceMatrix[rowIndex][colIndex] = computedDistance;
       });
     });
   }
@@ -160,7 +182,6 @@ class Board {
 // Boilerplate
 async function solution(path) {
   const lineOne = new Line(new Node(0, 0, 0), new Node(0, 10, 0));
-
   const lineTwo = new Line(new Node(0, 5, 10), new Node(0, 5, -10));
 
   const fileStream = fs.createReadStream(path, { encoding: "utf8" });
